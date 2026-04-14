@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="fw-bold mb-1 text-light">Candidate Overview</h2>
+        <span class="text-secondary"><i class="bi bi-briefcase"></i> Applied for: {{ job.title }}</span>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <form action="{{ url_for('recruiter.update_application_status', application_id=application.id) }}" method="POST" class="d-flex align-items-center gap-2 m-0">
+            <label class="text-secondary mb-0 fw-bold text-nowrap">Status:</label>
+            <select name="status" class="form-select bg-dark text-light border-secondary" style="width: auto;" onchange="this.form.submit()">
+                <option value="Applied" {% if application.status == 'Applied' %}selected{% endif %}>Applied</option>
+                <option value="Reviewing" {% if application.status == 'Reviewing' %}selected{% endif %}>Reviewing</option>
+                <option value="Interview" {% if application.status == 'Interview' %}selected{% endif %}>Interview</option>
+                <option value="Offer" {% if application.status == 'Offer' %}selected{% endif %}>Offer</option>
+                <option value="Rejected" {% if application.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </form>
+        <a href="{{ url_for('recruiter.kanban_board', job_id=job.id) }}" class="btn btn-outline-light"><i class="bi bi-arrow-left"></i> Back to Pipeline</a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Candidate Info -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 h-100" style="background-color: #1e1e1e; border: 1px solid #333 !important;">
+            <div class="card-body text-light">
+                <div class="text-center mb-4">
+                    <div class="display-3 text-secondary mb-2"><i class="bi bi-person-circle"></i></div>
+                    <h4 class="fw-bold">{{ application.resume.seeker.username|default('Candidate #') }}{{ application.resume.seeker.id if not application.resume.seeker.username else '' }}</h4>
+                    <p class="text-muted">{{ application.resume.seeker.email|default('No email provided') }}</p>
+                    
+                    <div class="mb-3">
+                        <span class="badge bg-primary px-3 py-2 fs-6 shadow-sm">AI Match Score: {{ "%.0f"|format(application.match_score|default(0)) }}%</span>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6 class="fw-bold mb-3 mt-4">Resume Details</h6>
+                <p class="small text-muted mb-1">Filename: {{ application.resume.filename }}</p>
+                <p class="small text-muted">Uploaded: {{ application.resume.uploaded_at.strftime('%Y-%m-%d') }}</p>
+                <a href="{{ url_for('static', filename='uploads/' ~ application.resume.filename) }}" class="btn btn-sm btn-outline-primary w-100 mt-2" target="_blank" download>Download Resume</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Analysis -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm border-0 border-top border-4 border-success mb-4 text-light" style="background-color: #1e1e1e; border-color: #333 !important; border-top-color: #198754 !important;">
+            <div class="card-body">
+                <h5 class="fw-bold text-success mb-3"><i class="bi bi-stars"></i> AI Extracted Skills</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% set ext_skills = json.loads(application.resume.extracted_skills|default('[]')) %}
+                    {% if ext_skills %}
+                        {% for skill in ext_skills %}
+                            <span class="badge bg-light text-dark border">{{ skill }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted">No specific technical skills extracted.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm border-0 border-top border-4 border-warning text-light" style="background-color: #1e1e1e; border-color: #333 !important; border-top-color: #ffc107 !important;">
+            <div class="card-body">
+                <h5 class="fw-bold text-warning mb-3"><i class="bi bi-exclamation-triangle"></i> Skill Gap Analysis</h5>
+                <p class="text-muted small mb-3">These are the skills required for the job but not found in the candidate's resume.</p>
+                
+                <div class="d-flex flex-wrap gap-2">
+                    {% set gaps = json.loads(application.skill_gaps|default('[]')) %}
+                    {% if gaps %}
+                        {% for gap in gaps %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger">{{ gap }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="badge bg-success-subtle text-success border border-success">Minimal skill gaps detected!</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-4 pt-4 border-top">
+                    <h6 class="fw-bold mb-2">Required by Job:</h6>
+                    <p class="small text-muted">{{ job.required_skills }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

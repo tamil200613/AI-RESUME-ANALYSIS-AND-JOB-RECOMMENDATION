@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block extra_css %}
+<style>
+    .login-wrapper {
+        min-height: calc(100vh - 76px); /* subtract navbar height */
+        display: flex;
+        background-color: #121212;
+    }
+    .login-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .login-hero h1 {
+        font-weight: 800;
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        z-index: 2;
+    }
+    .login-hero p {
+        font-size: 1.25rem;
+        opacity: 0.9;
+        max-width: 500px;
+        z-index: 2;
+    }
+    .login-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -100px;
+        right: -100px;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 1;
+    }
+    .login-hero::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        left: -50px;
+        width: 250px;
+        height: 250px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 1;
+    }
+    .login-form-container {
+        padding: 4rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }
+    .login-form-container .form-control {
+        background-color: #2d2d2d;
+        border-color: #444;
+        color: white;
+    }
+    .login-form-container .form-control::placeholder {
+        color: #888;
+    }
+    @media (max-width: 991.98px) {
+        .login-hero { padding: 3rem 2rem; }
+        .login-form-container { padding: 3rem 2rem; }
+        .login-hero h1 { font-size: 2.5rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+</div><!-- close container from base.html to allow full width -->
+<div class="container-fluid p-0">
+    <div class="row g-0 login-wrapper">
+        <!-- Left Side: Hero Section -->
+        <div class="col-lg-6 login-hero d-none d-lg-flex">
+            <h1>Find Your Perfect Match</h1>
+            <p>Our AI-powered platform makes recruitment and job hunting effortless. We analyze resumes against job requirements to find the ideal match for both job seekers and recruiters with unmatched accuracy.</p>
+        </div>
+        
+        <!-- Right Side: Register Form -->
+        <div class="col-lg-6 login-form-container">
+            <div class="mx-auto" style="width: 100%; max-width: 450px;">
+                <h2 class="fw-bold mb-2">Create Account</h2>
+                <p class="text-muted mb-4">Join us and streamline your process.</p>
+                
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-warning" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-semibold">Full Name / Company Name</label>
+                        <input type="text" class="form-control" id="username" name="username" required placeholder="Jane Doe">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold">Email address</label>
+                        <input type="email" class="form-control" id="email" name="email" required placeholder="name@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control border-end-0" id="password" name="password" required placeholder="Enter new password" minlength="8">
+                            <button class="btn border border-start-0" type="button" id="togglePassword" style="background-color: #2d2d2d; border-color: #444 !important;">
+                                <i class="bi bi-eye text-muted" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                        <div class="form-text text-secondary mt-1">Password must be at least 8 characters long.</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Role</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="role" id="roleSeeker" value="seeker" checked>
+                                <label class="form-check-label" for="roleSeeker">Job Seeker</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="role" id="roleRecruiter" value="recruiter">
+                                <label class="form-check-label" for="roleRecruiter">Recruiter / HR</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">Register Now</button>
+                    <div class="text-center mt-4">
+                        <span class="text-muted">Already have an account?</span> 
+                        <a href="{{ url_for('auth.login') }}" class="text-decoration-none fw-bold" style="color: #667eea;">Sign in</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div><div class="container"><!-- reopen container -->
+
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const icon = document.getElementById('toggleIcon');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    });
+</script>
+{% endblock %}

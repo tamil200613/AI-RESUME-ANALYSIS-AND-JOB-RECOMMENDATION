@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 col-lg-6">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-light">Upload Your Resume</h2>
+            <p class="text-secondary">Let our AI match you with the best open roles.</p>
+        </div>
+
+        <div class="card shadow rounded-4 border-0" style="background: #1e1e1e; border: 1px solid #333 !important;">
+            <div class="card-body p-5 text-center">
+                <form method="POST" action="{{ url_for('seeker.upload_resume') }}" enctype="multipart/form-data">
+                    <div class="upload-area p-5 mb-4 border border-2 border-dashed rounded-3" id="drop-zone" style="background-color: #2d2d2d; border-color: #555 !important; cursor: pointer; transition: all 0.2s ease;">
+                        <i class="bi bi-cloud-arrow-up display-1 text-primary mb-3 d-block" style="color: #667eea !important;"></i>
+                        <h4 class="fw-bold text-light">Drag & Drop Resume</h4>
+                        <p class="text-secondary mb-3">or click to browse your files</p>
+                        <p class="small text-muted mb-0">Supported formats: PDF, DOCX, TXT</p>
+                        
+                        <input type="file" name="resume_file" id="resume_file" class="d-none" accept=".pdf,.doc,.docx,.txt" required>
+                    </div>
+
+                    <div id="file-name-display" class="alert alert-info d-none mb-4 text-start bg-dark text-light border-secondary">
+                        Selected file: <strong id="file-name"></strong>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        Upload & Analyze <i class="bi bi-stars ms-1"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('seeker.dashboard') }}" class="text-decoration-none text-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple drag and drop / file input display script
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('resume_file');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const fileNameLabel = document.getElementById('file-name');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            fileNameLabel.textContent = e.target.files[0].name;
+            fileNameDisplay.classList.remove('d-none');
+            dropZone.style.borderColor = '#667eea';
+            dropZone.style.backgroundColor = '#f1f5f9';
+        }
+    });
+
+    ['dragover', 'dragenter'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#667eea';
+            dropZone.style.backgroundColor = '#3d3d3d';
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            if(eventName === 'drop' && e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            } else {
+                dropZone.style.borderColor = '#555';
+                dropZone.style.backgroundColor = '#2d2d2d';
+            }
+        });
+    });
+</script>
+{% endblock %}

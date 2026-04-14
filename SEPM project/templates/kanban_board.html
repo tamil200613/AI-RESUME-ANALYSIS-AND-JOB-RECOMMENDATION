@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1 text-light">{{ job.title }}</h2>
+        <span class="badge {{ 'bg-success' if job.is_active else 'bg-secondary' }}">{{ 'Active' if job.is_active else 'Closed' }}</span>
+        <span class="text-secondary ms-2"><i class="bi bi-clock"></i> Posted on {{ job.created_at.strftime('%b %d, %Y') }}</span>
+    </div>
+    <div>
+        <a href="{{ url_for('recruiter.dashboard') }}" class="btn btn-outline-light"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+    </div>
+</div>
+
+<!-- Stage Stepper / Tab Navigation -->
+<ul class="nav nav-pills nav-fill gap-2 mb-5 p-2 bg-dark rounded-4 border border-secondary border-opacity-25" id="roundTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-bold py-3 rounded-3" id="applied-tab" data-bs-toggle="pill" data-bs-target="#applied" type="button" role="tab" aria-selected="true">
+            <i class="bi bi-inbox me-2"></i>New Applied
+            <span class="badge bg-secondary ms-2">{{ applications|selectattr('status', 'equalto', 'Applied')|list|length }}</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold py-3 rounded-3" id="reviewing-tab" data-bs-toggle="pill" data-bs-target="#reviewing" type="button" role="tab" aria-selected="false">
+            <i class="bi bi-search me-2"></i>Round 1: Review
+            <span class="badge bg-info ms-2">{{ applications|selectattr('status', 'equalto', 'Reviewing')|list|length }}</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold py-3 rounded-3" id="interview-tab" data-bs-toggle="pill" data-bs-target="#interview" type="button" role="tab" aria-selected="false">
+            <i class="bi bi-chat-dots me-2"></i>Round 2: Interview
+            <span class="badge bg-primary ms-2">{{ applications|selectattr('status', 'equalto', 'Interview')|list|length }}</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold py-3 rounded-3" id="offer-tab" data-bs-toggle="pill" data-bs-target="#offer" type="button" role="tab" aria-selected="false">
+            <i class="bi bi-trophy me-2"></i>Round 3: Offer
+            <span class="badge bg-success ms-2">{{ applications|selectattr('status', 'equalto', 'Offer')|list|length }}</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold py-3 rounded-3 text-danger" id="rejected-tab" data-bs-toggle="pill" data-bs-target="#rejected" type="button" role="tab" aria-selected="false">
+            <i class="bi bi-x-circle me-2"></i>Rejected
+            <span class="badge bg-danger ms-2">{{ applications|selectattr('status', 'equalto', 'Rejected')|list|length }}</span>
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content: Focused Stage Lists -->
+<div class="tab-content" id="roundTabsContent">
+    {% set stages_config = [
+        ('Applied', 'Applied', 'Next: Reviewing', 'Reviewing'),
+        ('Reviewing', 'Reviewing', 'Next: Interview', 'Interview'),
+        ('Interview', 'Interview', 'Next: Offer', 'Offer'),
+        ('Offer', 'Offer', 'Hire Confirmed', None),
+        ('Rejected', 'Rejected', 'Reset to Applied', 'Applied')
+    ] %}
+
+    {% for stage_id, display_id, next_label, next_status in stages_config %}
+    <div class="tab-pane fade {{ 'show active' if stage_id == 'Applied' else '' }}" id="{{ stage_id|lower }}" role="tabpanel" aria-labelledby="{{ stage_id|lower }}-tab">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                {% set stage_apps = applications|selectattr('status', 'equalto', stage_id)|list %}
+                {% if stage_apps %}
+                    {% for app in stage_apps %}
+                    <div class="glass-panel mb-4 p-4 border-left-{{ stage_id|lower }}" style="border-left: 5px solid transparent;">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="bi bi-person h3 mb-0 text-primary"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold mb-0 text-white">{{ app.resume.seeker.username|default('Candidate') }}</h4>
+                                    <p class="text-muted small mb-0">{{ app.resume.filename }} • Score: <span class="text-white fw-bold">{{ "%.0f"|format(app.match_score|default(0)) }}%</span></p>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('recruiter.candidate_details', application_id=app.id) }}" class="btn btn-sm btn-outline-secondary">View Profile & Resume</a>
+                        </div>
+
+                        <!-- Action Bar -->
+                        <div class="d-flex gap-2 mt-4 pt-4 border-top border-secondary border-opacity-25">
+                            {% if next_status %}
+                            <form action="{{ url_for('recruiter.update_application_status', application_id=app.id) }}" method="POST" class="flex-grow-1">
+                                <input type="hidden" name="status" value="{{ next_status }}">
+                                <button type="submit" class="btn btn-{{ 'success' if stage_id == 'Interview' else 'primary' }} w-100 fw-bold py-2">
+                                    <i class="bi bi-check-circle-fill me-2"></i>{{ next_label }}
+                                </button>
+                            </form>
+                            {% endif %}
+                            
+                            {% if stage_id != 'Rejected' %}
+                            <form action="{{ url_for('recruiter.update_application_status', application_id=app.id) }}" method="POST" class="{{ 'flex-grow-1' if not next_status else 'col-3' }}">
+                                <input type="hidden" name="status" value="Rejected">
+                                <button type="submit" class="btn btn-outline-danger w-100 fw-bold py-2">
+                                    <i class="bi bi-x-circle me-1"></i>Reject
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 glass-panel">
+                        <i class="bi bi-person-x text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h4 class="text-muted">No candidates in this round.</h4>
+                        <p class="text-secondary small">Promote candidates from previous rounds to see them here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .nav-pills .nav-link {
+        color: #b0b0b0;
+        transition: all 0.3s ease;
+        background: transparent !important;
+        border: 1px solid transparent;
+    }
+    .nav-pills .nav-link.active {
+        background: rgba(99, 102, 241, 0.1) !important;
+        color: #6366f1 !important;
+        border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+    .nav-pills .nav-link:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #ffffff;
+    }
+    .border-left-applied { border-left-color: #6c757d !important; }
+    .border-left-reviewing { border-left-color: #0dcaf0 !important; }
+    .border-left-interview { border-left-color: #0d6efd !important; }
+    .border-left-offer { border-left-color: #198754 !important; }
+    .border-left-rejected { border-left-color: #dc3545 !important; }
+    
+    .glass-panel {
+        background: rgba(30, 30, 30, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1.5rem;
+    }
+</style>
+{% endblock %}

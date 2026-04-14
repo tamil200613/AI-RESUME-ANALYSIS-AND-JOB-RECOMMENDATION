@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Manage Jobs</li>
+        </ol>
+    </nav>
+    <h2 class="fw-bold">Platform Jobs</h2>
+</div>
+
+<div class="glass-panel p-4">
+    <div class="table-responsive">
+        <table class="table table-dark table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Job Title</th>
+                    <th>Recruiter</th>
+                    <th>Posted</th>
+                    <th>Applications</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>{{ job.id }}</td>
+                    <td><div class="fw-bold">{{ job.title }}</div></td>
+                    <td>{{ job.recruiter.username }}</td>
+                    <td>{{ job.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td><span class="badge bg-primary">{{ job.applications|length }}</span></td>
+                    <td>
+                        <span class="badge bg-{{ 'success' if job.is_active else 'secondary' }}">
+                            {{ 'Active' if job.is_active else 'Closed' }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
