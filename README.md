@@ -105,6 +105,7 @@ Performance Testing
 Security Testing
 
 📈 Future Enhancements
+
 Advanced AI models for better accuracy
 
 Resume feedback suggestions
@@ -116,11 +117,8 @@ Email notifications
 Dashboard analytics
 
 🤝 Contributors
+
 Tamilselvan A
-
-Abhinav K
-
-Ranjith K
 
 📜 License
 This project is developed for academic purposes.
