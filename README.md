@@ -115,13 +115,3 @@ Integration with job portals
 Email notifications
 
 Dashboard analytics
-
-🤝 Contributors
-
-Tamilselvan A
-
-📜 License
-This project is developed for academic purposes.
-
-⭐ Acknowledgment
-Thanks to our faculty and institution for guidance and support.
